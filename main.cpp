@@ -6,7 +6,14 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <string.h>
-#include <arpa/inet.h> 
+#include <arpa/inet.h>
+#include <mutex>
+#include <condition_variable>
+
+std::mutex mute;
+std::condition_variable cond_var;
+
+bool done = false;
 
 class Server
 {
@@ -47,6 +54,7 @@ class Server
 	public:
 		void sendToClient()
 		{
+			std::unique_lock<std::mutex> lock(mute);
 			for(int i = 0; i < 5; i++)
 			{
 				valread = read( new_socket , buffer, 1024); 
@@ -54,6 +62,8 @@ class Server
     			send(new_socket , hello , strlen(hello) , 0 ); 
     			printf("Server: Hello message sent %d\n", i); 
     		}
+    		done = true;
+    		cond_var.notify_one();
 		}
 	~Server()
 	{
@@ -129,6 +139,13 @@ private:
 
 int main()
 {
+	std::thread waiting_thread([](){
+		std::unique_lock<std::mutex> lock(mute);
+		printf("Waiting_thread: i am waiting ...\n");
+		while(!done)
+			cond_var.wait(lock);
+		printf("Waiting_thread: i am awake yeahh, all data recieved successfuly!\n");
+	});
 	std::thread server_thread([](){
 		Server *serv = Server::createServerInstance();
 		printf("Server: waiting for messages ...\n");
@@ -142,6 +159,9 @@ int main()
 	});
 	//Server *serv = Server::createServerInstance();
 	//serv->sendToClient();
+	if (waiting_thread.joinable())
+		waiting_thread.join();
+
 	if (server_thread.joinable())
 		server_thread.join();
 
