@@ -140,7 +140,7 @@ private:
 };
 
 //#include "SmartPtr.hpp"
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 	#define sharedPtr std::shared_ptr
@@ -183,7 +183,7 @@ int main()
 	printf("9) ptr.get = %d\n\n", *ptr.get());
 	printf("10) ptr_4.get = %d\n\n", *ptr_4.get());
 	printf("11) ptr_2.use_count = %d\n\n", ptr_2.use_count());
-	/*std::thread waiting_thread([](){
+	std::thread waiting_thread([](){
 		std::unique_lock<std::mutex> lock(mute);
 		printf("Waiting_thread: i am waiting ...\n");
 		while(!done)
@@ -196,8 +196,8 @@ int main()
 		serv->sendToClient();
 	});
 	std::thread client_thread([](){
+		sleep(1);
 		Client *client = new Client();
-		sleep(3);
 		printf("Client: here we go ...\n");
 		client->reieveFromServer();
 	});
@@ -211,6 +211,6 @@ int main()
 
 	if (client_thread.joinable())
 		client_thread.join();
-*/
+
 	return (0);
 }

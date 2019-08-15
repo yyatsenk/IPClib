@@ -60,7 +60,10 @@ template <class T> class sharedPtr
         //if (this->pointer != nullptr)
         auto found_2 = pointer_map.find(this->pointer);
         if (found_1 == found_2)
+        {
+            found_1->second++;
             return ;
+        }
         if (found_1 != pointer_map.end())
         {
             count = ++found_1->second;
