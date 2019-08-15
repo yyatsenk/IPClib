@@ -34,6 +34,8 @@
         "utility": "cpp",
         "cmath": "cpp",
         "new": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "vector": "cpp",
+        "deque": "cpp"
     }
 }

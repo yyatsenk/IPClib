@@ -1,11 +1,47 @@
 
 #ifndef SMARTPTR_H
 #define SMARTPTR_H
+#include <map>
+#include <iterator>
+/*
+template <class T> class Pointer
+    {
+        T *pointer;
+        int count;
+        Pointer()
+        {
+            pointer = nullptr;
+            count = 0;
+        }
+        void DestroyPtr()
+        {
+            if (count)
+            count--;
+            //printf("~sharedPtr: count = %d\n", count);
+            if (count == 0)
+            {
+                if (pointer != nullptr)
+                {
+                   delete pointer;
+                   ~Pointer();
+                }
+                printf("~Pointer: pointer deleted!!!\n");
+            }
+        }
+        ~Pointer()
+        {
+        }
+
+    Pointer<T> p;
+*/
 
 template <class T> class sharedPtr
 {
     T *pointer;
-    static int count;
+    int count;
+    static std::map<T *, int> pointer_map;
+    //T *pointer;
+    //static int count;
     public:
     sharedPtr()
     {
@@ -13,65 +49,87 @@ template <class T> class sharedPtr
     }
     sharedPtr(T *p)
     {
-        if (!pointer)
-            count = 1;
-        else
-            count++;
+        count = 1;
         pointer = p;
+        pointer_map.insert(std::make_pair(pointer, count));
     }
 
     sharedPtr(const sharedPtr<T>& rhs)
     {
-        //printf("sharedPtr(T const& rhs) invoked\n");
-        if (!rhs.pointer)
-        {
-            pointer = nullptr;
+        auto found_1 = pointer_map.find(rhs.pointer);
+        //if (this->pointer != nullptr)
+        auto found_2 = pointer_map.find(this->pointer);
+        if (found_1 == found_2)
             return ;
+        if (found_1 != pointer_map.end())
+        {
+            count = ++found_1->second;
+            pointer = found_1->first;
+
         }
-        //if (rhs.pointer != this->pointer)
-        //{
-        //}   
-        count++;
-        rhs.count = count;
+        if (found_2 != pointer_map.end())
+        {
+            --found_2->second;
+            if (found_2->second == 0)
+            {
+                pointer_map.erase(found_2->first);
+            }
+        }
+        //printf("sharedPtr(T const& rhs) invoked\n");
     }
 
     sharedPtr<T>& operator= (const sharedPtr<T>& rhs)
     {
-        //printf("T& operator= (T const& rhs) invoked\n");
-        if (!rhs.pointer)
+        auto found_1 = pointer_map.find(rhs.pointer);
+        //if (this->pointer != nullptr)
+        auto found_2 = pointer_map.find(this->pointer);
+        if (found_1 == found_2)
             return *this;
-        if (rhs.pointer != this->pointer)
-            pointer = rhs.pointer;
-        count = ++rhs.count;
+        if (found_1 != pointer_map.end())
+        {
+            count = ++found_1->second;
+            pointer = found_1->first;
+
+        }
+        if (found_2 != pointer_map.end())
+        {
+            --found_2->second;
+            if (found_2->second == 0)
+            {
+                pointer_map.erase(found_2->first);
+            }
+        }
         return *this;
     }
 
 
     ~sharedPtr()
     {
-        if (count)
-            count--;
-        //printf("~sharedPtr: count = %d\n", count);
-        if (count == 0)
+        auto found_1 = pointer_map.find(pointer);
+        if (found_1->second == 1)
         {
-            if (pointer != nullptr)
-                delete pointer;
-            printf("~sharedPtr: pointer deleted!!!\n");
+            pointer_map.erase(found_1->first);
+            delete pointer;
         }
+        else
+            found_1->second--;
+        
     }
 
     int use_count()
     {
-        return count;
+         auto found_1 = pointer_map.find(pointer);
+        return found_1->second;
     }
     T *get()
     {
-        return pointer;
+        auto found_1 = pointer_map.find(pointer);
+        return found_1->first;
     }
 };
 
 template <class T>
-int sharedPtr<T>::count = 0;
+std::map<T *, int> sharedPtr<T>::pointer_map;
 
 template <class T> class uniquePtr
 {

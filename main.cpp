@@ -140,7 +140,7 @@ private:
 };
 
 //#include "SmartPtr.hpp"
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 	#define sharedPtr std::shared_ptr
