@@ -10,6 +10,8 @@
 #include <mutex>
 #include <condition_variable>
 
+#include <memory>
+
 std::mutex mute;
 std::condition_variable cond_var;
 
@@ -137,9 +139,51 @@ private:
     char buffer[1024] = {0}; 
 };
 
+//#include "SmartPtr.hpp"
+#define DEBUG
+
+#ifdef DEBUG
+	#define sharedPtr std::shared_ptr
+#else
+	#include "SmartPtr.hpp"
+#endif
+
+void foo(sharedPtr<int> ptr)
+{
+	printf("5) use_count = %d\n\n", ptr.use_count());
+}
+
 int main()
 {
-	std::thread waiting_thread([](){
+	int *int_p = new int(100);
+	int *int_p_2 = new int(200);
+
+	sharedPtr<int> ptr(int_p);
+	printf("1) ptr.use_count = %d\n\n", ptr.use_count());
+	sharedPtr<int> ptr_2(ptr);
+	printf("2) ptr.use_count = %d\n\n", ptr.use_count());
+	{
+		sharedPtr<int> ptr_3(ptr);
+		printf("3) ptr.use_count = %d\n\n", ptr.use_count());
+	}
+	printf("4) ptr.use_count = %d\n\n", ptr.use_count());
+	//sharedPtr<int> ptr(int_p);
+	//sharedPtr<int> ptr_2(ptr);
+	//ptr = int_p;
+	
+	//printf("ptr_2.use_count = %d\n\n", ptr_2.use_count());
+	foo(ptr);
+	printf("6) ptr.use_count = %d\n\n", ptr.use_count());
+
+	sharedPtr<int> ptr_4(int_p_2);
+	sharedPtr<int> ptr_5(ptr_4);
+	ptr = ptr_4;
+	printf("7) ptr.use_count = %d\n\n", ptr.use_count());
+	printf("8) ptr_4.use_count = %d\n\n", ptr_4.use_count());
+	printf("9) ptr.get = %d\n\n", *ptr.get());
+	printf("10) ptr_4.get = %d\n\n", *ptr_4.get());
+	printf("11) ptr_2.use_count = %d\n\n", ptr_2.use_count());
+	/*std::thread waiting_thread([](){
 		std::unique_lock<std::mutex> lock(mute);
 		printf("Waiting_thread: i am waiting ...\n");
 		while(!done)
@@ -167,6 +211,6 @@ int main()
 
 	if (client_thread.joinable())
 		client_thread.join();
-
+*/
 	return (0);
 }
